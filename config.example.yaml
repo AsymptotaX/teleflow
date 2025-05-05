@@ -1,0 +1,60 @@
+# Column mappings for telemetry data
+columns:
+  device_id: device_id      # Column name containing the device ID
+  timestamp: timestamp      # Column name containing the timestamp
+
+# Filtering rules (optional)
+filters:
+  - column: status
+    operator: eq
+    value: OK
+
+  - column: signal_type
+    operator: eq
+    value: voltage
+
+  - column: temperature
+    operator: gt
+    value: 22.0
+
+# Rolling window for telemetry smoothing/aggregation (optional)
+rolling: 10
+
+# MQTT source configuration
+mqtt:
+  host: "your-mqtt-broker.com"
+  port: 8883
+  use_tls: true
+  username: "your-username"
+  password: "your-password"
+  topic: "telemetry/#"
+  keep_alive: 30
+  connect_timeout: 60
+  client_id: null  # Optional custom client ID
+
+  # Internal buffers
+  buffer_size: 10000            # Channel size for batching incoming messages
+  eventloop_buffer_size: 9000   # MQTT client's internal buffer
+
+# Output batch file config (to local disk)
+output:
+  enabled: false
+  format: "parquet"              # "csv", "parquet", or "json"
+  path: "./output"
+  compression: "zstd"            # Only for Parquet: "zstd", "snappy", "none"
+  batch_naming: "timestamp"
+  max_batches: 100
+  min_disk_space_gb: 1.0
+
+# Optional sink config for streaming to InfluxDB or HTTP API
+sink:
+  enabled: false
+  type: "http"
+  endpoint: "http://localhost:8086/api/v2/write"
+  auth_token: "your-auth-token"
+  format: "influx"               # "influx" or "json"
+  org: "your-org"
+  bucket: "teleflow"
+  precision: "ns"
+  buffer_size: 10000
+  eventloop_buffer_size: 15000

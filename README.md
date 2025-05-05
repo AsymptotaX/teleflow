@@ -51,6 +51,24 @@ teleflow generate-test --rows 10000 --devices 50 --output ./test.parquet
 
 ---
 
+## 🛠️ Quick Start
+
+1. Download the [latest release](https://github.com/AsymptotaX/teleflow/releases)
+2. Copy the example config:
+
+```bash
+cp config.example.yaml config.yaml
+```
+
+3. Edit `config.yaml` to match your MQTT / InfluxDB settings
+4. Run Teleflow:
+
+```bash
+./teleflow process-mqtt --config config.yaml
+```
+
+---
+
 ## Configuration Example (`config.yaml`)
 
 ```yaml
