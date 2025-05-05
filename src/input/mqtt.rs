@@ -12,22 +12,25 @@ use serde_json::Value;
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use std::time::Duration;
-use tokio::sync::{mpsc, Semaphore};
+use tokio::sync::{Semaphore, mpsc};
 use tokio::task::JoinHandle;
-use tokio::time::{sleep, timeout, Duration as TokioDuration, Instant};
+use tokio::time::{Duration as TokioDuration, Instant, sleep, timeout};
 
+/// Manages dynamic parallelism for batch processing using a semaphore.
 #[derive(Clone)]
 struct DynamicSemaphore {
     semaphore: Arc<Semaphore>,
     stats: Arc<tokio::sync::Mutex<Stats>>,
 }
 
+/// Tracks statistics for dynamic semaphore adjustments.
 struct Stats {
     last_check: Instant,
     completed_batches: usize,
 }
 
 impl DynamicSemaphore {
+    /// Creates a new `DynamicSemaphore` with the specified initial permits.
     fn new(initial: usize) -> Self {
         Self {
             semaphore: Arc::new(Semaphore::new(initial)),
@@ -38,10 +41,12 @@ impl DynamicSemaphore {
         }
     }
 
+    /// Acquires a permit for batch processing.
     async fn acquire(&self) -> tokio::sync::OwnedSemaphorePermit {
         self.semaphore.clone().acquire_owned().await.unwrap()
     }
 
+    /// Updates stats when a batch is completed and adjusts parallelism if needed.
     async fn batch_completed(&self) {
         let mut stats = self.stats.lock().await;
         stats.completed_batches += 1;
@@ -69,18 +74,21 @@ impl DynamicSemaphore {
         }
     }
 
+    /// Returns the number of available permits.
     fn available(&self) -> usize {
         self.semaphore.available_permits()
     }
 }
 
+/// Processes MQTT messages, parses them, and sends to a processor.
 pub async fn process_mqtt(
     config: ProcessingConfig,
     output_writer: Arc<dyn OutputWriter>,
     sink_writer: Option<Arc<dyn SinkWriter>>,
     buffer_size: usize,
+    eventloop_buffer_size: usize,
 ) -> Result<(), TelemetryError> {
-    let (_, mut eventloop) = reconnect_and_resubscribe(&config).await?;
+    let (_, mut eventloop) = reconnect_and_resubscribe(&config, &eventloop_buffer_size).await?;
 
     let (tx, rx) = mpsc::channel(buffer_size);
     let processor_handle =
@@ -107,7 +115,7 @@ pub async fn process_mqtt(
                 );
                 sleep(TokioDuration::from_secs(reconnect_delay_secs)).await;
 
-                match reconnect_and_resubscribe(&config).await {
+                match reconnect_and_resubscribe(&config, &eventloop_buffer_size).await {
                     Ok((_, new_eventloop)) => {
                         eventloop = new_eventloop;
                         info!("Successfully reconnected and re-subscribed");
@@ -132,16 +140,20 @@ pub async fn process_mqtt(
     Ok(())
 }
 
+/// Reconnects to the MQTT broker and resubscribes to the topic.
 async fn reconnect_and_resubscribe(
     config: &ProcessingConfig,
+    eventloop_buffer_size: &usize,
 ) -> Result<(AsyncClient, rumqttc::EventLoop), TelemetryError> {
-    let (client, eventloop) = create_mqtt_client(config).await?;
+    let (client, eventloop) = create_mqtt_client(config, eventloop_buffer_size).await?;
     subscribe_to_topic(&client, &config.mqtt.topic).await?;
     Ok((client, eventloop))
 }
 
+/// Creates an MQTT client with the specified configuration.
 async fn create_mqtt_client(
     config: &ProcessingConfig,
+    eventloop_buffer_size: &usize,
 ) -> Result<(AsyncClient, rumqttc::EventLoop), TelemetryError> {
     let mqtt_config = &config.mqtt;
     let client_id = mqtt_config
@@ -163,7 +175,7 @@ async fn create_mqtt_client(
     let mut network_options = NetworkOptions::new();
     network_options.set_connection_timeout(mqtt_config.connect_timeout);
 
-    let (client, mut eventloop) = AsyncClient::new(mqttoptions, 30_000);
+    let (client, mut eventloop) = AsyncClient::new(mqttoptions, *eventloop_buffer_size);
     eventloop.set_network_options(network_options);
 
     wait_for_connection(
@@ -172,11 +184,12 @@ async fn create_mqtt_client(
         &mqtt_config.host,
         mqtt_config.port,
     )
-    .await?;
+        .await?;
 
     Ok((client, eventloop))
 }
 
+/// Waits for a connection to the MQTT broker.
 async fn wait_for_connection(
     eventloop: &mut rumqttc::EventLoop,
     timeout_secs: u64,
@@ -192,7 +205,7 @@ async fn wait_for_connection(
             }
         }
     })
-    .await
+        .await
     {
         Ok(Ok(())) => {
             info!("Connected to MQTT broker: {}:{}", host, port);
@@ -203,6 +216,7 @@ async fn wait_for_connection(
     }
 }
 
+/// Subscribes to the specified MQTT topic.
 async fn subscribe_to_topic(client: &AsyncClient, topic: &str) -> Result<(), TelemetryError> {
     info!("Subscribed to topic: {}", topic);
     client
@@ -211,6 +225,7 @@ async fn subscribe_to_topic(client: &AsyncClient, topic: &str) -> Result<(), Tel
         .map_err(|e| io_error(e.to_string()))
 }
 
+/// Spawns a processor task to handle incoming MQTT messages.
 fn spawn_processor(
     mut rx: mpsc::Receiver<Vec<(String, i64, Vec<(String, Value)>)>>,
     config: ProcessingConfig,
@@ -264,6 +279,7 @@ fn spawn_processor(
     })
 }
 
+/// Parses MQTT payload into a structured format.
 fn parse_payload(payload: &[u8]) -> Option<(String, i64, Vec<(String, Value)>)> {
     match serde_json::from_slice::<Value>(payload) {
         Ok(val) => {
@@ -285,6 +301,7 @@ fn parse_payload(payload: &[u8]) -> Option<(String, i64, Vec<(String, Value)>)> 
     }
 }
 
+/// Sends parsed payload to the processor buffer.
 async fn send_to_buffer(
     tx: &mpsc::Sender<Vec<(String, i64, Vec<(String, Value)>)>>,
     parsed: (String, i64, Vec<(String, Value)>),
@@ -294,6 +311,7 @@ async fn send_to_buffer(
         .map_err(|e| io_error(e.to_string()))
 }
 
+/// Builds a Polars DataFrame from parsed MQTT messages.
 fn build_dataframe(
     buf: &[(String, i64, Vec<(String, Value)>)],
 ) -> Result<DataFrame, TelemetryError> {
@@ -306,7 +324,7 @@ fn build_dataframe(
         "device_id" => device_ids,
         "timestamp" => timestamps
     ]
-    .map_err(TelemetryError::Polars)?;
+        .map_err(TelemetryError::Polars)?;
 
     let mut numeric_columns: HashMap<&str, Vec<Option<f64>>> = HashMap::new();
     let mut string_columns: HashMap<&str, Vec<Option<String>>> = HashMap::new();
@@ -355,10 +373,12 @@ fn build_dataframe(
     Ok(df)
 }
 
+/// Converts a string error into a `TelemetryError`.
 fn io_error(msg: String) -> TelemetryError {
     TelemetryError::Io(std::io::Error::new(std::io::ErrorKind::Other, msg))
 }
 
+/// Processes a batch of MQTT messages asynchronously.
 async fn process_batch(
     buf: Vec<(String, i64, Vec<(String, Value)>)>,
     config: ProcessingConfig,

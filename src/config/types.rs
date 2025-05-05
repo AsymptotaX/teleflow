@@ -65,6 +65,9 @@ pub struct OutputConfig {
 
     /// Minimum free disk space (GB) required to continue writing
     pub min_disk_space_gb: Option<f64>,
+
+    /// Enable or disable output
+    pub enabled: Option<bool>,
 }
 
 /// Configuration for MQTT connection.
@@ -100,6 +103,12 @@ pub struct MqttConfig {
 
     /// Optional MQTT client ID
     pub client_id: Option<String>,
+
+    //  Optional buffer size
+    pub buffer_size: Option<usize>,
+
+    /// Option event loop buffer size
+    pub eventloop_buffer_size: Option<usize>,
 }
 
 /// Configuration for data sink (e.g., HTTP push to InfluxDB).
@@ -125,6 +134,12 @@ pub struct SinkConfig {
 
     /// Optional time precision (e.g., ns, us)
     pub precision: Option<String>,
+
+    /// Enable or disable the sink
+    pub enabled: Option<bool>,
+
+    /// Optional batch size for sink
+    pub eventloop_buffer_size: Option<bool>,
 }
 
 /// Default keep-alive timeout (in seconds) for MQTT

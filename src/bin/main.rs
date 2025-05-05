@@ -1,6 +1,8 @@
 use clap::Parser;
-use log::{error, info};
+use log::{error, info, warn};
 use std::sync::Arc;
+use teleflow::output::writer::NoopWriter;
+use teleflow::sink::NoopSinkWriter;
 use teleflow::{
     cli::commands::{Cli, Commands},
     config::parser::load_config,
@@ -15,22 +17,16 @@ use teleflow::{
     utils::generate_test_data,
 };
 
-/// Creates an output writer based on the provided processing configuration.
+/// Initializes the appropriate output writer based on the configuration.
 ///
-/// # Arguments
-///
-/// * `config` - A reference to the `ProcessingConfig` containing output format and path details.
-///
-/// # Returns
-///
-/// An `Arc` containing a trait object implementing the `OutputWriter` trait.
-///
-/// # Panics
-///
-/// Panics if the specified output format is unsupported.
+/// Supports Parquet, CSV, and JSON formats. If `output.enabled = false`, a no-op writer is returned.
 fn create_output_writer(
     config: &teleflow::config::types::ProcessingConfig,
 ) -> Arc<dyn OutputWriter> {
+    if config.output.enabled == Some(false) {
+        return Arc::new(NoopWriter);
+    }
+
     match config.output.format.as_str() {
         "parquet" => Arc::new(ParquetFileWriter::new(
             config.output.path.clone(),
@@ -44,21 +40,14 @@ fn create_output_writer(
     }
 }
 
-/// Creates a sink writer based on the provided sink configuration.
+/// Initializes the appropriate sink writer based on the configuration.
 ///
-/// # Arguments
-///
-/// * `sink_config` - A reference to the `SinkConfig` containing sink type and endpoint details.
-///
-/// # Returns
-///
-/// A `Result` containing an `Arc` with a trait object implementing the `SinkWriter` trait on success,
-/// or a `TelemetryError` on failure.
-///
-/// # Errors
-///
-/// Returns a `TelemetryError` if the specified sink type is unsupported.
+/// Currently supports HTTP sinks (e.g. InfluxDB). If `sink.enabled = false`, returns a no-op sink.
 fn create_sink_writer(sink_config: &SinkConfig) -> Result<Arc<dyn SinkWriter>, TelemetryError> {
+    if sink_config.enabled == Some(false) {
+        return Ok(Arc::new(NoopSinkWriter));
+    }
+
     match sink_config.r#type.as_str() {
         "http" => Ok(Arc::new(HttpSinkWriter::new(
             sink_config.endpoint.clone(),
@@ -74,20 +63,19 @@ fn create_sink_writer(sink_config: &SinkConfig) -> Result<Arc<dyn SinkWriter>, T
     }
 }
 
-/// The main entry point for the application.
+/// The main entry point for the Teleflow application.
 ///
-/// Parses command-line arguments, initializes logging, and executes the specified command.
-///
-/// # Returns
-///
-/// A `Result` indicating success or failure.
-///
-/// # Errors
-///
-/// Returns a `TelemetryError` if any step in the command execution fails.
+/// This function:
+/// - Parses CLI arguments
+/// - Loads configuration from file
+/// - Dispatches one of the following commands:
+///     - `process`: Reads telemetry from a Parquet file
+///     - `process-mqtt`: Connects to an MQTT broker and streams data
+///     - `generate-test`: Generates synthetic telemetry data
 #[tokio::main]
 async fn main() -> Result<(), TelemetryError> {
     env_logger::init();
+
     let cli = Cli::parse();
 
     tokio::spawn(async {
@@ -101,7 +89,6 @@ async fn main() -> Result<(), TelemetryError> {
             info!("Reading Parquet file: {}", input);
             let config = load_config(&config)?;
             let output_writer = create_output_writer(&config);
-
             let df = read_parquet(&input)?;
             process_telemetry(df, config, output_writer, None).await?;
         }
@@ -109,18 +96,45 @@ async fn main() -> Result<(), TelemetryError> {
         Commands::ProcessMqtt {
             config,
             buffer_size,
+            eventloop_buffer_size,
         } => {
             info!("Starting MQTT processing (config: {})", config);
-            let config = load_config(&config)?;
-            let output_writer = create_output_writer(&config);
+            let cli_config = load_config(&config)?;
+            let output_writer = create_output_writer(&cli_config);
 
-            let sink_writer = if let Some(sink_config) = &config.sink {
+            let sink_writer = if let Some(sink_config) = &cli_config.sink {
                 Some(create_sink_writer(sink_config)?)
             } else {
                 None
             };
 
-            process_mqtt(config, output_writer, sink_writer, buffer_size).await?;
+            let buffer_size = cli_config.mqtt.buffer_size.unwrap_or(buffer_size);
+
+            let eventloop_buffer_size = cli_config
+                .mqtt
+                .eventloop_buffer_size
+                .unwrap_or(eventloop_buffer_size);
+
+            if eventloop_buffer_size >= buffer_size {
+                warn!(
+                    "eventloop_buffer_size ({}) >= buffer_size ({}). This may cause congestion.",
+                    eventloop_buffer_size, buffer_size
+                );
+            }
+
+            info!(
+                "MQTT buffer size: {}, eventloop buffer size: {}",
+                buffer_size, eventloop_buffer_size
+            );
+
+            process_mqtt(
+                cli_config,
+                output_writer,
+                sink_writer,
+                buffer_size,
+                eventloop_buffer_size,
+            )
+            .await?;
         }
 
         Commands::GenerateTest {
@@ -140,15 +154,9 @@ async fn main() -> Result<(), TelemetryError> {
     Ok(())
 }
 
-/// Waits for a shutdown signal (Ctrl+C) and gracefully stops the application.
+/// Handles graceful shutdown by listening for Ctrl+C (SIGINT).
 ///
-/// # Returns
-///
-/// A `Result` indicating success or failure.
-///
-/// # Errors
-///
-/// Returns a `TelemetryError` if the shutdown signal cannot be listened for.
+/// Exits the process cleanly when triggered.
 async fn shutdown_signal() -> Result<(), TelemetryError> {
     use tokio::signal;
     signal::ctrl_c().await.map_err(|e| {

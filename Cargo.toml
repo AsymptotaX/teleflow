@@ -1,30 +1,47 @@
 [package]
 name = "teleflow"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 description = "High-performance telemetry processing for IoT"
 license = "MIT"
 repository = "https://github.com/AsymptotaX/teleflow"
 keywords = ["iot", "telemetry", "rust", "polars", "parquet"]
 
+# Core dependencies
 [dependencies]
-polars = { version = "0.46.0", features = ["dynamic_group_by", "strings", "lazy", "json", "csv", "parquet", "polars-io", "rolling_window", "streaming"] }
-clap = { version = "4.5.37", features = ["derive"] }
-thiserror = "2.0.12"
-log = "0.4.27"
-env_logger = "0.11.8"
-serde = { version = "1.0.219", features = ["derive"] }
-serde_json = "1.0.140"
-rand = "0.9.1"
-tokio = { version = "1.44.2", features = ["full"] }
-serde_yaml = "0.9.33"
-rumqttc = { version = "0.24.0", features = ["use-rustls"] }
-uuid = "1.16.0"
-chrono = "0.4.40"
-sysinfo = "0.34.2"
 async-trait = "0.1.88"
-reqwest = "0.12.15"
+chrono = "0.4.40"
+clap = { version = "4.5.37", features = ["derive"] }
 flate2 = "1.1.1"
+log = "0.4.27"
+rand = "0.9.1"
+reqwest = "0.12.15"
+serde = { version = "1.0.219", features = ["derive"] }
+sysinfo = "0.35.0"
+thiserror = "2.0.12"
+uuid = "1.16.0"
+
+# Data processing
+polars = { version = "0.46.0", features = [
+    "dynamic_group_by",
+    "strings",
+    "lazy",
+    "json",
+    "csv",
+    "parquet",
+    "polars-io",
+    "rolling_window",
+    "streaming"
+] }
+serde_json = "1.0.140"
+serde_yaml = "0.9.33"
+
+# Async runtime and networking
+tokio = { version = "1.44.2", features = ["full"] }
+rumqttc = { version = "0.24.0", features = ["use-rustls"] }
+
+# Logging utilities
+env_logger = "0.11.8"
 
 [[bin]]
 name = "teleflow"

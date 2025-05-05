@@ -7,10 +7,20 @@ use std::path::Path;
 use sysinfo::Disks;
 use tokio::task;
 
+/// Trait defining the behavior of an output writer.
+/// Implementations of this trait are responsible for writing data batches to specific formats.
+/// Trait defining the behavior of an output writer for telemetry data.
+///
+/// Implementations handle the writing of `DataFrame` batches
+/// to various output formats (Parquet, CSV, JSON, etc.).
 pub trait OutputWriter: Send + Sync {
+    /// Write a batch of telemetry data.
     fn write_batch(&self, df: &DataFrame) -> Result<(), TelemetryError>;
 }
 
+/// Writer for Parquet files.
+/// Handles writing data batches to Parquet format with optional compression and cleanup.
+/// Output writer for Parquet files with optional compression and batch cleanup.
 #[derive(Clone)]
 pub struct ParquetFileWriter {
     output_dir: String,
@@ -19,15 +29,27 @@ pub struct ParquetFileWriter {
     min_disk_space_gb: Option<f64>,
 }
 
+/// Writer for CSV files.
+/// Handles writing data batches to CSV format.
+/// Output writer for CSV files.
 pub struct CsvFileWriter {
     output_dir: String,
 }
 
+/// Writer for JSON files.
+/// Handles writing data batches to JSON format.
+/// Output writer for JSON files.
 pub struct JsonFileWriter {
     output_dir: String,
 }
 
 impl ParquetFileWriter {
+    /// Creates a new `ParquetFileWriter`.
+    ///
+    /// - `output_dir`: Directory to store output Parquet files.
+    /// - `compression`: Compression type for Parquet output.
+    /// - `max_batches`: Maximum number of batch files to keep (cleanup applies).
+    /// - `min_disk_space_gb`: Minimum free space required on disk (cleanup applies).
     pub fn new(
         output_dir: String,
         compression: ParquetCompression,
@@ -42,6 +64,8 @@ impl ParquetFileWriter {
         }
     }
 
+    /// Generates a unique filename for a new Parquet file.
+    /// Generates a unique filename for a new CSV file.
     fn generate_filename(&self) -> String {
         format!(
             "{}/batch_{}.parquet",
@@ -50,6 +74,9 @@ impl ParquetFileWriter {
         )
     }
 
+    /// Synchronously writes a batch to a Parquet file.
+    ///
+    /// Logs file size, row count, and issues warnings for very small or very large files.
     pub fn write_batch_sync(&self, df: &DataFrame) -> Result<(), TelemetryError> {
         let filename = self.generate_filename();
 
@@ -90,6 +117,9 @@ impl ParquetFileWriter {
         Ok(())
     }
 
+    /// Asynchronously cleans up old batch files based on `max_batches` and `min_disk_space_gb`.
+    ///
+    /// Runs in a background task via `tokio::spawn_blocking`.
     async fn cleanup_batches(self) -> Result<(), TelemetryError> {
         let output_dir = self.output_dir;
         let max_batches = self.max_batches;
@@ -176,10 +206,24 @@ impl ParquetFileWriter {
 }
 
 impl CsvFileWriter {
+    /// Creates a new `ParquetFileWriter`.
+    ///
+    /// - `output_dir`: Directory to store output Parquet files.
+    /// - `compression`: Compression type for Parquet output.
+    /// - `max_batches`: Maximum number of batch files to keep (cleanup applies).
+    /// - `min_disk_space_gb`: Minimum free space required on disk (cleanup applies).
+    /// Creates a new `CsvFileWriter`.
+    ///
+    /// - `output_dir`: Directory to store CSV files.
+    /// Creates a new `JsonFileWriter`.
+    ///
+    /// - `output_dir`: Directory to store JSON files.
     pub fn new(output_dir: String) -> Self {
         Self { output_dir }
     }
 
+    /// Generates a unique filename for a new Parquet file.
+    /// Generates a unique filename for a new CSV file.
     fn generate_filename(&self) -> String {
         format!(
             "{}/batch_{}.csv",
@@ -190,10 +234,24 @@ impl CsvFileWriter {
 }
 
 impl JsonFileWriter {
+    /// Creates a new `ParquetFileWriter`.
+    ///
+    /// - `output_dir`: Directory to store output Parquet files.
+    /// - `compression`: Compression type for Parquet output.
+    /// - `max_batches`: Maximum number of batch files to keep (cleanup applies).
+    /// - `min_disk_space_gb`: Minimum free space required on disk (cleanup applies).
+    /// Creates a new `CsvFileWriter`.
+    ///
+    /// - `output_dir`: Directory to store CSV files.
+    /// Creates a new `JsonFileWriter`.
+    ///
+    /// - `output_dir`: Directory to store JSON files.
     pub fn new(output_dir: String) -> Self {
         Self { output_dir }
     }
 
+    /// Generates a unique filename for a new Parquet file.
+    /// Generates a unique filename for a new CSV file.
     fn generate_filename(&self) -> String {
         format!(
             "{}/batch_{}.json",
@@ -287,5 +345,17 @@ pub fn get_parquet_compression(compression: Option<String>) -> ParquetCompressio
         }
     } else {
         ParquetCompression::Snappy
+    }
+}
+
+/// Output writer that performs no action (noop).
+///
+/// Used when `output.enabled = false` in config.
+pub struct NoopWriter;
+
+impl OutputWriter for NoopWriter {
+    /// Does nothing. Always returns `Ok(())`.
+    fn write_batch(&self, _df: &DataFrame) -> Result<(), TelemetryError> {
+        Ok(())
     }
 }

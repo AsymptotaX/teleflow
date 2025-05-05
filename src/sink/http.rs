@@ -1,14 +1,14 @@
 use crate::error::TelemetryError;
 use crate::sink::SinkWriter;
-use flate2::write::GzEncoder;
 use flate2::Compression;
+use flate2::write::GzEncoder;
 use log::warn;
 use polars::prelude::*;
 use reqwest::header::{CONTENT_ENCODING, CONTENT_TYPE};
 use reqwest::{Client, RequestBuilder, Response};
 use serde_json::Value;
 use std::io::Write;
-use tokio::time::{sleep, Duration};
+use tokio::time::{Duration, sleep};
 
 /// A writer for sending data to an HTTP endpoint.
 /// This struct handles formatting, compressing, and sending data batches to a specified HTTP endpoint.
