@@ -29,6 +29,7 @@ architecture
 config
 cli
 docker
+benchmark
 ```
 
 ---

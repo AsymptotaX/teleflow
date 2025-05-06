@@ -45,7 +45,7 @@ teleflow generate-test --config config.yaml
 
 ---
 
-## ⚙️ Global Options
+## Global Options
 
 | Option                       | Description                                      |
 |------------------------------|--------------------------------------------------|
