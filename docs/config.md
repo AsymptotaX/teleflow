@@ -26,11 +26,13 @@ mqtt:
 
 output:
   enabled: true
-  ...
+  format: parquet
+  # ...
 
 sink:
   enabled: false
-  ...
+  endpoint: http://localhost:8080
+  # ...
 ```
 
 ---
