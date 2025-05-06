@@ -1,4 +1,4 @@
-# 📘 Teleflow Documentation
+# Teleflow Documentation
 
 **Teleflow** is a high-performance telemetry processing engine built in Rust.
 
@@ -6,7 +6,7 @@ It collects, filters, transforms, and exports real-time telemetry data over MQTT
 
 ---
 
-## 🚀 Features
+## Features
 
 - ⚡ Fast, memory-efficient telemetry ingestion
 - 🔌 MQTT-based real-time pipeline
@@ -19,18 +19,21 @@ It collects, filters, transforms, and exports real-time telemetry data over MQTT
 
 ---
 
-## 📚 Documentation Sections
+## Documentation Sections
 
-| Section                        | Description                                          |
-|--------------------------------|------------------------------------------------------|
-| [Overview & Architecture](architecture.md)  | Learn how Teleflow works internally               |
-| [Configuration Reference](config.md)         | YAML structure and quick field reference          | |
-| [CLI Reference](cli.md)                      | Commands, flags, and usage examples               |
-| [Running with Docker](docker.md)             | Building and deploying using Docker               |
+```{toctree}
+:maxdepth: 2
+:caption: Contents
+
+architecture
+config
+cli
+docker
+```
 
 ---
 
-## 🧰 Quick Start
+## Quick Start
 
 ```bash
 # Clone and build
@@ -45,7 +48,7 @@ docker run --rm -v $PWD/config.yaml:/app/config.yaml teleflow
 
 ---
 
-## 📎 See Also
+## See Also
 
 - [Project Repository](https://github.com/AsymptotaX/teleflow)
 - [Issues](https://github.com/AsymptotaX/teleflow/issues)

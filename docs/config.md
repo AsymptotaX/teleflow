@@ -4,7 +4,7 @@ Teleflow is configured using a single YAML file that defines input (MQTT), outpu
 
 ---
 
-## 📌 General Structure
+## General Structure
 
 ```yaml
 columns:
@@ -35,7 +35,7 @@ sink:
 
 ---
 
-## 🧱 Column Mapping
+## Column Mapping
 
 ```yaml
 columns:
@@ -47,11 +47,11 @@ These define how incoming telemetry maps to internal fields.
 
 ---
 
-## 🔍 Filters
+## Filters
 
 `filters` is an optional list of rules applied to incoming data before processing.
 
-### 🔤 Structure
+### Structure
 
 ```yaml
 filters:
@@ -60,7 +60,7 @@ filters:
     value: <comparison value>
 ```
 
-### 🔧 Supported Operators
+### Supported Operators
 
 | Operator | Description             | Example        |
 |----------|-------------------------|----------------|
@@ -75,7 +75,7 @@ Use these to exclude irrelevant data early in the pipeline.
 
 ---
 
-## 🔁 Rolling
+## Rolling
 
 ```yaml
 rolling: 10
@@ -85,7 +85,7 @@ Apply rolling mean to numeric columns. Window size is specified in rows.
 
 ---
 
-## 📡 MQTT Section
+## MQTT Section
 
 ```yaml
 mqtt:
@@ -109,7 +109,7 @@ mqtt:
 
 ---
 
-## 💾 Output Section
+## Output Section
 
 ```yaml
 output:
@@ -127,7 +127,7 @@ output:
 
 ---
 
-## 🌐 Sink Section
+## Sink Section
 
 ```yaml
 sink:
@@ -147,7 +147,7 @@ If enabled, telemetry is streamed to an HTTP/InfluxDB-compatible endpoint.
 
 ---
 
-## ✅ Minimal Example
+## Minimal Example
 
 ```yaml
 mqtt:

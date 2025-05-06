@@ -1,10 +1,10 @@
-# 🐳 Running Teleflow with Docker
+# Running Teleflow with Docker
 
 Teleflow can be run as a self-contained Docker container without installing Rust or dependencies on your host system.
 
 ---
 
-## 🧱 Build the Docker Image
+## Build the Docker Image
 
 ```bash
 docker build -t teleflow .
@@ -14,7 +14,7 @@ This will compile the Teleflow binary and produce a minimal runtime container.
 
 ---
 
-## 🚀 Run with a Config File
+## Run with a Config File
 
 You must mount your own `config.yaml` into the container:
 
@@ -38,7 +38,7 @@ This allows you to use `process`, `generate-test`, or any other supported CLI op
 
 ---
 
-## 🔒 Notes
+## Notes
 
 - Ensure your MQTT and sink endpoints are accessible from inside the container.
 - If you're using secure brokers or InfluxDB over HTTPS, configure TLS and authentication fields in `config.yaml`.
@@ -46,7 +46,7 @@ This allows you to use `process`, `generate-test`, or any other supported CLI op
 
 ---
 
-## 🧪 Example with Output Volume
+## Example with Output Volume
 
 ```bash
 docker run --rm -v $PWD/config.yaml:/app/config.yaml -v $PWD/output:/app/output teleflow

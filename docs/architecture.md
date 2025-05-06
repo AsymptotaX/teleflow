@@ -1,17 +1,17 @@
-# 🧠 Teleflow Architecture
+# Teleflow Architecture
 
 Teleflow is designed to be a high-performance, modular telemetry pipeline. This document explains how data flows through the system and where you can plug in additional logic or sinks.
 
 ---
 
-## 🔄 High-Level Flow
+## High-Level Flow
 
 Teleflow can ingest telemetry data from two sources:
 
 - **Live ingestion** via MQTT broker (real-time device data)
 - **Static files** (for batch processing or historical imports)
 
-### 📈 Data Flow
+### Data Flow
 
 ```
 [MQTT Devices]        [Static Files]
@@ -36,13 +36,13 @@ You can run Teleflow in different modes depending on the data source:
 
 ---
 
-## 🖼 System Diagram
+## System Diagram
 
 ![Teleflow architecture diagram](images/architecture.png)
 
 ---
 
-## ⚙️ MQTT Ingestion
+## MQTT Ingestion
 
 - Uses `rumqttc` with async event loop
 - Connects to a broker and subscribes to a topic (`telemetry/#`)
@@ -51,7 +51,7 @@ You can run Teleflow in different modes depending on the data source:
 
 ---
 
-## 🧵 Batching & Buffering
+## Batching & Buffering
 
 - Incoming messages are stored in an internal buffer (`buffer_size`)
 - If the buffer fills or a timeout occurs, a batch is sent for processing
@@ -59,7 +59,7 @@ You can run Teleflow in different modes depending on the data source:
 
 ---
 
-## 🧮 Processing Stage
+## Processing Stage
 
 - DataFrame is built from the batch using `polars`
 - Filters are applied using configuration rules
@@ -68,7 +68,7 @@ You can run Teleflow in different modes depending on the data source:
 
 ---
 
-## 💾 Output Writer
+## Output Writer
 
 - Writes processed data to file (`csv`, `json`, `parquet`)
 - Supports batching, disk cleanup, file compression
@@ -76,7 +76,7 @@ You can run Teleflow in different modes depending on the data source:
 
 ---
 
-## 🌐 Sink Writer (Optional)
+## Sink Writer (Optional)
 
 - Sends data to a remote system like InfluxDB or HTTP API
 - Works in parallel with file output
@@ -84,7 +84,7 @@ You can run Teleflow in different modes depending on the data source:
 
 ---
 
-## 🧠 Dynamic Concurrency
+## Dynamic Concurrency
 
 - Teleflow uses an internal `DynamicSemaphore` to manage load
 - Adjusts the number of parallel batches depending on processing speed
@@ -92,7 +92,7 @@ You can run Teleflow in different modes depending on the data source:
 
 ---
 
-## 💡 Customization Points
+## Customization Points
 
 You can extend Teleflow by:
 

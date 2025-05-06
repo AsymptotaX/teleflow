@@ -4,7 +4,7 @@ Teleflow provides several subcommands for processing and testing telemetry pipel
 
 ---
 
-## 🧪 `process`
+## `process`
 
 Run a batch processing job from a static source (e.g., file or test data). Useful for development and debugging.
 
@@ -18,7 +18,7 @@ teleflow process --config config.yaml
 
 ---
 
-## 📡 `process-mqtt`
+## `process-mqtt`
 
 Start a live pipeline that listens to a MQTT broker and processes incoming telemetry in real time.
 
@@ -32,7 +32,7 @@ teleflow process-mqtt --config config.yaml --buffer-size 10000 --eventloop-buffe
 
 ---
 
-## 🧰 `generate-test`
+## `generate-test`
 
 Generate synthetic telemetry and write it to file using the configured output settings.
 
