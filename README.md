@@ -69,6 +69,37 @@ cp config.example.yaml config.yaml
 
 ---
 
+## 🐳 Running with Docker
+
+You can run **Teleflow** inside a container using the provided `Dockerfile`.
+
+### 🔧 Build the Docker image
+
+```bash
+docker build -t teleflow .
+```
+
+### 🚀 Run with your own config
+
+Since the image does not include a configuration file, you need to mount it manually:
+
+```bash
+docker run --rm -v $PWD/config.yaml:/app/config.yaml teleflow
+```
+
+You can also override the command if needed:
+
+```bash
+docker run --rm -v $PWD/config.yaml:/app/config.yaml teleflow process --config config.yaml
+```
+
+### 📌 Notes
+
+- Make sure your MQTT and sink endpoints are reachable from inside the container.
+- You can customize paths, commands, and environment variables as needed.
+
+---
+
 ## Configuration Example (`config.yaml`)
 
 ```yaml

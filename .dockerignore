@@ -1,0 +1,22 @@
+# Ignore the entire target directory
+target
+
+# Ignore CI/CD and Git-related files
+.git
+.gitignore
+.github
+
+# Ignore editor and IDE files
+.vscode
+.idea
+
+# Ignore temporary and log files
+*.log
+*.rs.bk
+*.swp
+
+# Ignore documentation and miscellaneous files
+README.md LICENSE *.md
+
+# Ignore config if managed separately
+config.yaml
