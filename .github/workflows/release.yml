@@ -1,3 +1,8 @@
+# Release workflow for Teleflow
+#
+# Builds and releases Teleflow binaries for multiple platforms (x86_64 and ARM64)
+# when a GitHub release is created. Includes testing, caching, and packaging.
+
 name: Release
 
 on:
@@ -12,6 +17,7 @@ jobs:
     name: Build Teleflow for ${{ matrix.target }}
     runs-on: ${{ matrix.os }}
     strategy:
+      # Build for x86_64 and ARM64 on Linux, Windows, macOS
       matrix:
         include:
           - target: x86_64-unknown-linux-gnu
@@ -20,10 +26,24 @@ jobs:
             os: windows-latest
           - target: x86_64-apple-darwin
             os: macos-latest
+          - target: aarch64-unknown-linux-gnu
+            os: ubuntu-latest
+          - target: aarch64-apple-darwin
+            os: macos-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Cache Cargo
+        # Cache Cargo dependencies to speed up builds
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Set up Rust
         uses: dtolnay/rust-toolchain@stable
@@ -31,21 +51,30 @@ jobs:
           toolchain: stable
           targets: ${{ matrix.target }}
 
+      - name: Check Rust version
+        run: rustc --version
+
       - name: Install dependencies (Linux)
         if: matrix.os == 'ubuntu-latest'
         run: sudo apt-get update && sudo apt-get install -y pkg-config libssl-dev
 
       - name: Install dependencies (macOS)
         if: matrix.os == 'macos-latest'
-        run: brew install openssl@3
+        run: |
+          if ! brew list openssl@3 &>/dev/null; then
+            brew install openssl@3
+          else
+            echo "openssl@3 is already installed"
+          fi
 
       - name: Build release binary
         run: cargo build --release --target ${{ matrix.target }}
 
       - name: Package binary
+        shell: bash {0}
         run: |
           mkdir dist
-          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
             cp target/${{ matrix.target }}/release/teleflow.exe dist/
             cd dist
             7z a teleflow-${{ matrix.target }}.zip teleflow.exe
