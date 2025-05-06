@@ -1,22 +1,29 @@
-# Stage 1: Build Teleflow from source
+# Stage 1: Build
 FROM rust:1.86-slim AS builder
+
+ENV CARGO_REGISTRIES_CRATES_IO_PROTOCOL=git
+
+RUN apt-get update && apt-get install -y \
+  pkg-config \
+  libssl-dev \
+  ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Copy project files (excluding those in .dockerignore, e.g., target/)
-COPY . .
+COPY Cargo.toml Cargo.lock ./
+RUN cargo fetch
 
+COPY . .
 RUN cargo build --release
 
-# Stage 2: Runtime image
+# Stage 2: Runtime
 FROM debian:bullseye-slim
 
-# Add runtime dependencies (if needed)
 RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 COPY --from=builder /app/target/release/teleflow /usr/local/bin/teleflow
 
-# Default command: MQTT processing with config.yaml
 ENTRYPOINT ["teleflow"]
 CMD ["process-mqtt", "--config", "config.yaml"]
