@@ -23,12 +23,12 @@ pub fn generate_test_data(n: usize, num_devices: usize) -> Result<DataFrame, Pol
         let signal_type = if rng.random_bool(0.5) {
             "voltage"
         } else {
-            "temp"
+            "temperature"
         }
         .to_string();
 
         let value = match signal_type.as_str() {
-            "temp" => rng.random_range(20.0..30.0),
+            "temperature" => rng.random_range(20.0..30.0),
             "voltage" => rng.random_range(3.0..4.0),
             _ => 0.0,
         };

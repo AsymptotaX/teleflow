@@ -9,6 +9,8 @@ use clap::{Parser, Subcommand};
 pub struct Cli {
     #[command(subcommand)]
     pub command: Commands,
+    #[clap(long, help = "Force output to stdout")]
+    pub stdout: bool,
 }
 
 /// Subcommands available in the Teleflow CLI.

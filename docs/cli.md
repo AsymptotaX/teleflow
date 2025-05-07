@@ -60,11 +60,17 @@ teleflow generate-test --rows 100 --devices 10 --output testdata.parquet
 
 ## Global Options
 
-| Option                       | Description                                     |
-|------------------------------|-------------------------------------------------|
-| `--config <path>`            | Path to your configuration YAML file            |
-| `--buffer-size <usize>`      | Internal buffer for batching telemetry rows     |
-| `--eventloop-buffer-size`    | MQTT client event buffer (in-flight messages)   |
+| Option                       | Description                                               |
+|------------------------------|-----------------------------------------------------------|
+| `--config <path>`            | Path to your configuration YAML file                      |
+| `--buffer-size <usize>`      | Internal buffer for batching telemetry rows               |
+| `--eventloop-buffer-size`    | MQTT client event buffer (in-flight messages)             |
+| `--stdout`                   | Force output to stdout (only if `output.enabled = false`) |
+
+**Important:** Global flags like `--stdout` must be passed **before** the subcommand:
+```bash
+teleflow --stdout process --input testdata.parquet --config config.yaml
+```
 
 Use `--help` after any subcommand for detailed options:
 

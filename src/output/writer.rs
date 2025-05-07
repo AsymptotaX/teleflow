@@ -359,3 +359,16 @@ impl OutputWriter for NoopWriter {
         Ok(())
     }
 }
+
+/// A writer that outputs data to the console.
+///
+/// This implementation of the `OutputWriter` trait is used to print
+/// the contents of a `DataFrame` to the standard output.
+pub struct ConsoleWriter;
+
+impl OutputWriter for ConsoleWriter {
+    fn write_batch(&self, df: &DataFrame) -> Result<(), TelemetryError> {
+        println!("{df}");
+        Ok(())
+    }
+}

@@ -1,7 +1,7 @@
 use clap::Parser;
 use log::{error, info, warn};
 use std::sync::Arc;
-use teleflow::output::writer::NoopWriter;
+use teleflow::output::writer::{ConsoleWriter, NoopWriter};
 use teleflow::sink::NoopSinkWriter;
 use teleflow::{
     cli::commands::{Cli, Commands},
@@ -22,9 +22,14 @@ use teleflow::{
 /// Supports Parquet, CSV, and JSON formats. If `output.enabled = false`, a no-op writer is returned.
 fn create_output_writer(
     config: &teleflow::config::types::ProcessingConfig,
+    force_stdout: bool,
 ) -> Arc<dyn OutputWriter> {
     if config.output.enabled == Some(false) {
-        return Arc::new(NoopWriter);
+        return if force_stdout {
+            Arc::new(ConsoleWriter)
+        } else {
+            Arc::new(NoopWriter)
+        }
     }
 
     match config.output.format.as_str() {
@@ -84,11 +89,11 @@ async fn main() -> Result<(), TelemetryError> {
         }
     });
 
-    match cli.command {
+    match &cli.command {
         Commands::Process { input, config } => {
             info!("Reading Parquet file: {}", input);
             let config = load_config(&config)?;
-            let output_writer = create_output_writer(&config);
+            let output_writer = create_output_writer(&config, cli.stdout);
             let df = read_parquet(&input)?;
             process_telemetry(df, config, output_writer, None).await?;
         }
@@ -100,7 +105,7 @@ async fn main() -> Result<(), TelemetryError> {
         } => {
             info!("Starting MQTT processing (config: {})", config);
             let cli_config = load_config(&config)?;
-            let output_writer = create_output_writer(&cli_config);
+            let output_writer = create_output_writer(&cli_config, cli.stdout);
 
             let sink_writer = if let Some(sink_config) = &cli_config.sink {
                 Some(create_sink_writer(sink_config)?)
@@ -108,12 +113,12 @@ async fn main() -> Result<(), TelemetryError> {
                 None
             };
 
-            let buffer_size = cli_config.mqtt.buffer_size.unwrap_or(buffer_size);
+            let buffer_size = cli_config.mqtt.buffer_size.unwrap_or(*buffer_size);
 
             let eventloop_buffer_size = cli_config
                 .mqtt
                 .eventloop_buffer_size
-                .unwrap_or(eventloop_buffer_size);
+                .unwrap_or(*eventloop_buffer_size);
 
             if eventloop_buffer_size >= buffer_size {
                 warn!(
@@ -142,7 +147,7 @@ async fn main() -> Result<(), TelemetryError> {
             devices,
             output,
         } => {
-            let mut df = generate_test_data(rows, devices)?;
+            let mut df = generate_test_data(*rows, *devices)?;
             let mut file = std::fs::File::create(&output)?;
             polars::prelude::ParquetWriter::new(&mut file)
                 .finish(&mut df)
