@@ -44,7 +44,9 @@ cargo build --release
 
 # Or run in Docker
 docker build -t teleflow .
-docker run --rm -v $PWD/config.yaml:/app/config.yaml teleflow
+docker run --rm \
+  -v $PWD/your_config.yaml:/app/config.yaml \
+  teleflow process-mqtt --config /app/config.yaml
 ```
 
 ---

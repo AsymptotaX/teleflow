@@ -16,25 +16,38 @@ This will compile the Teleflow binary and produce a minimal runtime container.
 
 ## Run with a Config File
 
-You must mount your own `config.yaml` into the container:
+Since the image does not include a configuration file, you need to mount it manually:
 
+Start Teleflow with MQTT input
 ```bash
-docker run --rm -v $PWD/config.yaml:/app/config.yaml teleflow
+docker run --rm \
+  -v $PWD/your_config.yaml:/app/config.yaml \
+  teleflow process-mqtt --config /app/config.yaml
+
 ```
 
-By default, this runs the `process-mqtt` command.
-
----
-
-## 🛠 Overriding the Default Command
-
-You can override the default command using Docker CLI arguments:
-
+Start Teleflow to process a static input file
 ```bash
-docker run --rm -v $PWD/config.yaml:/app/config.yaml teleflow process --config config.yaml
+docker run --rm \
+  -v $PWD/your_config.yaml:/app/config.yaml \
+  teleflow process --config /app/config.yaml
 ```
 
-This allows you to use `process`, `generate-test`, or any other supported CLI option.
+Enable debug-level logging using RUST_LOG
+```bash
+docker run --rm \
+  -v $PWD/your_config.yaml:/app/config.yaml \
+  -e RUST_LOG=debug \
+  teleflow process-mqtt --config /app/config.yaml
+```
+
+Run container in background mode (-d)
+```bash
+docker run -d \
+  -v $PWD/your_config.yaml:/app/config.yaml \
+  --name teleflow \
+  teleflow process-mqtt --config /app/config.yaml
+```
 
 ---
 

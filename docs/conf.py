@@ -27,6 +27,6 @@ html_logo = "images/logo.png"
 
 # Markdown configuration
 myst_enable_extensions = [
-    'colon_fence',  # Support ::: for directives
-    'deflist',      # Definition lists
+    'colon_fence',
+    'deflist',
 ]

@@ -47,8 +47,8 @@ teleflow generate-test --config config.yaml
 
 ## Global Options
 
-| Option                       | Description                                      |
-|------------------------------|--------------------------------------------------|
+| Option                       | Description                                     |
+|------------------------------|-------------------------------------------------|
 | `--config <path>`            | Path to your configuration YAML file            |
 | `--buffer-size <usize>`      | Internal buffer for batching telemetry rows     |
 | `--eventloop-buffer-size`    | MQTT client event buffer (in-flight messages)   |

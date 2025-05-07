@@ -21,12 +21,12 @@ These results showcase Teleflow's ability to handle extremely high-throughput te
 
 ## Raw Benchmark Sample (with sinks disabled)
 
-| Time     | Rows Processed | Total Time (ms) |
-|----------|----------------|-----------------|
-| 17:46:33 | 26,625         | 2.77            |
-| 17:46:38 | 44,943         | 3.01            |
-| 17:46:43 | 29,605         | 2.61            |
-| 17:46:48 | 21,094         | 2.51            |
+| Batch Size | Telemetry Processing Time | Total Time (MQTT + Telemetry) |
+|------------|---------------------------|-------------------------------|
+| 26,625     | 2.223 ms                  | 2.766 ms                      |
+| 44,943     | 2.159 ms                  | 3.011 ms                      |
+| 29,605     | 1.743 ms                  | 2.608 ms                      |
+| 21,094     | 1.690 ms                  | 2.509 ms                      |
 
 ⚠️ These results were collected with `sink.enabled = false` and `output.enabled = false` for maximum raw throughput measurement.
 

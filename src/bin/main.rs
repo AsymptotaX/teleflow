@@ -117,7 +117,7 @@ async fn main() -> Result<(), TelemetryError> {
 
             if eventloop_buffer_size >= buffer_size {
                 warn!(
-                    "eventloop_buffer_size ({}) >= buffer_size ({}). This may cause congestion.",
+                    "eventloop_buffer_size ({}) <= buffer_size ({}). This may cause congestion.",
                     eventloop_buffer_size, buffer_size
                 );
             }

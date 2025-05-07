@@ -64,14 +64,14 @@ filters:
 
 ### Supported Operators
 
-| Operator | Description             | Example        |
-|----------|-------------------------|----------------|
-| `eq`     | Equals                  | `value: OK`    |
-| `ne`     | Not equal               | `value: NOK`   |
-| `gt`     | Greater than            | `value: 50`    |
-| `lt`     | Less than               | `value: 10`    |
-| `ge`     | Greater than or equal  | `value: 3.5`   |
-| `le`     | Less than or equal     | `value: 0.01`  |
+| Operator | Description           | Example       |
+|----------|-----------------------|---------------|
+| `eq`     | Equals                | `value: OK`   |
+| `ne`     | Not equal             | `value: NOK`  |
+| `gt`     | Greater than          | `value: 50`   |
+| `lt`     | Less than             | `value: 10`   |
+| `ge`     | Greater than or equal | `value: 3.5`  |
+| `le`     | Less than or equal    | `value: 0.01` |
 
 Use these to exclude irrelevant data early in the pipeline.
 

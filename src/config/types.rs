@@ -107,7 +107,7 @@ pub struct MqttConfig {
     //  Optional buffer size
     pub buffer_size: Option<usize>,
 
-    /// Option event loop buffer size
+    /// Optional event loop buffer size
     pub eventloop_buffer_size: Option<usize>,
 }
 
@@ -138,8 +138,11 @@ pub struct SinkConfig {
     /// Enable or disable the sink
     pub enabled: Option<bool>,
 
-    /// Optional batch size for sink
-    pub eventloop_buffer_size: Option<bool>,
+    /// Optional buffer size
+    pub buffer_size: Option<usize>,
+
+    /// Optional event loop buffer size
+    pub eventloop_buffer_size: Option<usize>,
 }
 
 /// Default keep-alive timeout (in seconds) for MQTT
