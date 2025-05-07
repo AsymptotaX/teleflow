@@ -9,7 +9,7 @@ Teleflow provides several subcommands for processing and testing telemetry pipel
 Run a batch processing job from a static source (e.g., file or test data). Useful for development and debugging.
 
 ```bash
-teleflow process --config config.yaml
+teleflow process --input data.parquet --config config.yaml
 ```
 
 - Reads telemetry from configured sources
@@ -34,14 +34,27 @@ teleflow process-mqtt --config config.yaml --buffer-size 10000 --eventloop-buffe
 
 ## `generate-test`
 
-Generate synthetic telemetry and write it to file using the configured output settings.
+Generate synthetic telemetry and write it to a file.
 
 ```bash
-teleflow generate-test --config config.yaml
+teleflow generate-test --rows 100 --devices 10 --output testdata.parquet
 ```
 
-- Great for testing dashboards, sink connections, and local pipelines
-- Data is deterministic and reproducible
+- Great for testing dashboards, sink integrations, and benchmarking
+- Output is saved in Parquet format
+- Each row includes a synthetic signal with a unified `value` field
+
+### Example output:
+
+| device_id | timestamp   | status | signal_type | value               |
+|-----------|-------------|--------|-------------|---------------------|
+| dev-8     | 1625660871  | OK     | temp        | 22.80067840233416   |
+| dev-1     | 1625622402  | OK     | voltage     | 3.626076362720073   |
+| dev-6     | 1625804790  | ERROR  | temp        | 29.54769961012679   |
+| dev-1     | 1626073168  | ERROR  | voltage     | 3.701339785285878   |
+
+- `signal_type` defines the meaning of `value`
+- Only one `value` column is used to simplify processing and reduce ambiguity
 
 ---
 
@@ -56,5 +69,7 @@ teleflow generate-test --config config.yaml
 Use `--help` after any subcommand for detailed options:
 
 ```bash
+teleflow process --help
 teleflow process-mqtt --help
+teleflow generate-test --help
 ```

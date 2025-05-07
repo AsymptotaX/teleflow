@@ -10,48 +10,43 @@ use rand::Rng;
 pub fn generate_test_data(n: usize, num_devices: usize) -> Result<DataFrame, PolarsError> {
     let mut rng = rand::rng();
 
-    let device_ids: Vec<String> = (0..n)
-        .map(|_| format!("dev-{}", rng.random_range(1..=num_devices)))
-        .collect();
+    let mut device_ids = Vec::with_capacity(n);
+    let mut timestamps = Vec::with_capacity(n);
+    let mut statuses = Vec::with_capacity(n);
+    let mut signal_types = Vec::with_capacity(n);
+    let mut values = Vec::with_capacity(n);
 
-    let timestamps: Vec<i64> = (0..n)
-        .map(|_| rng.random_range(1625097600..1626097600))
-        .collect();
+    for _ in 0..n {
+        let device_id = format!("dev-{}", rng.random_range(1..=num_devices));
+        let timestamp = rng.random_range(1625097600..1626097600);
+        let status = if rng.random_bool(0.5) { "OK" } else { "ERROR" }.to_string();
+        let signal_type = if rng.random_bool(0.5) {
+            "voltage"
+        } else {
+            "temp"
+        }
+        .to_string();
 
-    let temps: Vec<f64> = (0..n)
-        .map(|_| rng.random_range(20.0..30.0))
-        .collect();
+        let value = match signal_type.as_str() {
+            "temp" => rng.random_range(20.0..30.0),
+            "voltage" => rng.random_range(3.0..4.0),
+            _ => 0.0,
+        };
 
-    let voltages: Vec<f64> = (0..n)
-        .map(|_| rng.random_range(3.0..4.0))
-        .collect();
+        device_ids.push(device_id);
+        timestamps.push(timestamp);
+        statuses.push(status);
+        signal_types.push(signal_type);
+        values.push(value);
+    }
 
-    let statuses: Vec<String> = (0..n)
-        .map(|_| {
-            if rng.random_bool(0.5) {
-                "OK".to_string()
-            } else {
-                "ERROR".to_string()
-            }
-        })
-        .collect();
+    let df = df![
+        "device_id" => device_ids,
+        "timestamp" => timestamps,
+        "status" => statuses,
+        "signal_type" => signal_types,
+        "value" => values,
+    ]?;
 
-    let signal_types: Vec<String> = (0..n)
-        .map(|_| {
-            if rng.random_bool(0.5) {
-                "voltage".to_string()
-            } else {
-                "temp".to_string()
-            }
-        })
-        .collect();
-
-    DataFrame::new(vec![
-        Column::from(Series::new(PlSmallStr::from("device_id"), device_ids)),
-        Column::from(Series::new(PlSmallStr::from("timestamp"), timestamps)),
-        Column::from(Series::new(PlSmallStr::from("temp"), temps)),
-        Column::from(Series::new(PlSmallStr::from("voltage"), voltages)),
-        Column::from(Series::new(PlSmallStr::from("status"), statuses)),
-        Column::from(Series::new(PlSmallStr::from("signal_type"), signal_types)),
-    ])
+    Ok(df)
 }
