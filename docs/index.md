@@ -23,13 +23,26 @@ It collects, filters, transforms, and exports real-time telemetry data over MQTT
 
 ```{toctree}
 :maxdepth: 2
-:caption: Contents
+:caption: Getting Started
+installation
+static_file_guide
+mqtt_guide
+```
 
-architecture
+```{toctree}
+:maxdepth: 2
+:caption: Configuration
 config
 cli
-docker
+```
+
+```{toctree}
+:maxdepth: 2
+:caption: Reference
+architecture
 benchmark
+changelog
+
 ```
 
 ---

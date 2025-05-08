@@ -1,4 +1,4 @@
-# CLI Reference
+# CLI
 
 Teleflow provides several subcommands for processing and testing telemetry pipelines.
 

@@ -21,6 +21,7 @@ html_theme_options = {
     'collapse_navigation': False,
     'navigation_depth': 4,
     'style_nav_header_background': 'white',
+    "titles_only": False,
 }
 
 html_logo = "images/logo.png"
